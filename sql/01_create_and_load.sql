@@ -25,13 +25,13 @@ CREATE TABLE hospitals_raw (
     hospital_type          VARCHAR(50),
     hospital_ownership     VARCHAR(60),
     emergency_services     VARCHAR(5),
-    overall_rating         VARCHAR(20),   -- '1'-'5' or 'Not Available'
+    overall_rating         VARCHAR(20),   
     overall_rating_footnote VARCHAR(20),
-    mort_better            VARCHAR(20),   -- # mortality measures better than national
+    mort_better            VARCHAR(20),  
     mort_worse             VARCHAR(20),
-    safety_better          VARCHAR(20),   -- # safety measures better than national
+    safety_better          VARCHAR(20),   
     safety_worse           VARCHAR(20),
-    readm_better           VARCHAR(20),   -- # readmission measures better than national
+    readm_better           VARCHAR(20),  
     readm_worse            VARCHAR(20)
 );
 
@@ -41,15 +41,15 @@ FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
 IGNORE 1 LINES
 (facility_id, facility_name, address, city, state, zip_code, county,
- @skip,                                    -- Telephone Number
+ @skip,                                   
  hospital_type, hospital_ownership, emergency_services,
- @skip,                                    -- Birthing friendly designation
+ @skip,                                    
  overall_rating, overall_rating_footnote,
- @skip, @skip, mort_better, @skip, mort_worse, @skip,       -- MORT group
- @skip, @skip, safety_better, @skip, safety_worse, @skip,   -- Safety group
- @skip, @skip, readm_better, @skip, readm_worse, @skip,     -- READM group
- @skip, @skip, @skip,                      -- Patient experience group
- @skip, @skip, @skip);                     -- Timely & effective care group
+ @skip, @skip, mort_better, @skip, mort_worse, @skip,      
+ @skip, @skip, safety_better, @skip, safety_worse, @skip,  
+ @skip, @skip, readm_better, @skip, readm_worse, @skip,     
+ @skip, @skip, @skip,                     
+ @skip, @skip, @skip);                     
 
 
 /* ---------------------------------------------------------------------
@@ -62,7 +62,7 @@ CREATE TABLE spending_raw (
     facility_id   VARCHAR(10) PRIMARY KEY,
     state         CHAR(2),
     measure_id    VARCHAR(20),
-    score         VARCHAR(20),     -- e.g. '0.99' or 'Not Available'
+    score         VARCHAR(20),     
     footnote      VARCHAR(20),
     start_date    VARCHAR(10),
     end_date      VARCHAR(10)
@@ -73,15 +73,11 @@ INTO TABLE spending_raw
 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
 IGNORE 1 LINES
-(facility_id, @skip, @skip, @skip, state, @skip, @skip, @skip,   -- name..phone (already in hospitals_raw)
+(facility_id, @skip, @skip, @skip, state, @skip, @skip, @skip,   
  measure_id, @skip, score, footnote, start_date, end_date);
-
-
 
   -- 3. UNPLANNED HOSPITAL VISITS
 
- 
-   
 DROP TABLE IF EXISTS unplanned_visits_raw;
 
 CREATE TABLE unplanned_visits_raw (
@@ -96,7 +92,7 @@ CREATE TABLE unplanned_visits_raw (
     footnote               VARCHAR(20),
     start_date             VARCHAR(10),
     end_date               VARCHAR(10),
-    PRIMARY KEY (facility_id, measure_id)    -- one row per hospital + measure
+    PRIMARY KEY (facility_id, measure_id)    
 );
 
 LOAD DATA LOCAL INFILE 'C:/Users/tsilo/Downloads/Portfolio/Hospital-quality-vs-cost/data/raw/Unplanned_Hospital_Visits-Hospital.csv'
@@ -104,10 +100,10 @@ INTO TABLE unplanned_visits_raw
 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
 IGNORE 1 LINES
-(facility_id, @skip, @skip, @skip, @skip, @skip, @skip, @skip,  -- name..phone
+(facility_id, @skip, @skip, @skip, @skip, @skip, @skip, @skip,  
  measure_id, measure_name, compared_to_national, denominator, score,
  lower_estimate, higher_estimate,
- @skip, @skip,                                                   -- Number of Patients / Returned
+ @skip, @skip,                                                   
  footnote, start_date, end_date);
 
 
