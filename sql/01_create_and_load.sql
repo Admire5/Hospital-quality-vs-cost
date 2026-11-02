@@ -1,24 +1,6 @@
-/* =====================================================================
-   Project:  Hospital Quality vs. Cost (Project 02)
-   Script:   01_create_and_load.sql
-   Purpose:  Create the database and load three CMS Provider Data
-             Catalog files into raw tables.
-   Source:   CMS Provider Data Catalog - data.cms.gov/provider-data
-             1. Hospital General Information           (1 row per hospital)
-             2. Medicare Spending Per Beneficiary - Hospital (1 row per hospital)
-             3. Unplanned Hospital Visits - Hospital    (1 row per hospital per measure)
-   Author:   Siloyiso Admire Tshababa
 
-   NOTES ON THE RAW FILES (from profiling before loading):
-   - Facility ID is TEXT: it has leading zeros (010001) and some IDs
-     contain letters (01014F). Storing it as a number would break it.
-   - CMS writes 'Not Available' inside numeric columns, so every column
-     is loaded as text here. Conversion to numbers happens in script 02.
-   - Some names/addresses contain commas inside quotes -> ENCLOSED BY '"'.
-   - Files use Windows line endings -> LINES TERMINATED BY '\r\n'.
-   - Columns we don't need are read into @skip so LOAD DATA can still
-     match every column in the file.
-   ===================================================================== */
+  -- Project:  Hospital Quality vs. Cost
+   
 
 -- Needed again if MySQL restarted since Project 01
 SET GLOBAL local_infile = 1;
@@ -73,7 +55,6 @@ IGNORE 1 LINES
 /* ---------------------------------------------------------------------
    2. MEDICARE SPENDING PER BENEFICIARY (MSPB)  (one row per hospital)
    Score = hospital spending per episode / national median.
-   1.00 = national median; 1.10 = 10% more expensive; 0.90 = 10% cheaper.
    --------------------------------------------------------------------- */
 DROP TABLE IF EXISTS spending_raw;
 
@@ -96,11 +77,11 @@ IGNORE 1 LINES
  measure_id, @skip, score, footnote, start_date, end_date);
 
 
-/* ---------------------------------------------------------------------
-   3. UNPLANNED HOSPITAL VISITS  (one row per hospital PER MEASURE)
-   14 measures per hospital, e.g. READM_30_HF = heart failure
-   30-day readmission rate (%).
-   --------------------------------------------------------------------- */
+
+  -- 3. UNPLANNED HOSPITAL VISITS
+
+ 
+   
 DROP TABLE IF EXISTS unplanned_visits_raw;
 
 CREATE TABLE unplanned_visits_raw (
@@ -130,21 +111,56 @@ IGNORE 1 LINES
  footnote, start_date, end_date);
 
 
-/* ---------------------------------------------------------------------
-   4. SANITY CHECKS
-   --------------------------------------------------------------------- */
--- Expected: 5,419 | 4,626 | 67,060
-SELECT 'hospitals_raw'        AS table_name, COUNT(*) AS row_count FROM hospitals_raw
-UNION ALL
-SELECT 'spending_raw',                       COUNT(*)              FROM spending_raw
-UNION ALL
-SELECT 'unplanned_visits_raw',               COUNT(*)              FROM unplanned_visits_raw;
+select * from hospital_quality.hospitals_raw limit 20;
 
--- Expected: 192 hospitals in New York
+select distinct state
+from hospital_quality.hospitals_raw;
+
+select distinct hospital_ownership
+from hospital_quality.hospitals_raw;
+
+select distinct hospital_type
+from hospital_quality.hospitals_raw;
+
+
+select distinct overall_rating
+from hospital_quality.hospitals_raw;
+
+select distinct overall_rating_footnote, count(*) as hospitals, round(100.0 * count(*)/sum(count(*)) over(),1) as avg_missing
+from hospital_quality.hospitals_raw
+group by overall_rating_footnote;
+
+
+SELECT overall_rating_footnote,
+       SUM(overall_rating =  'Not Available') AS rating_missing,
+       SUM(overall_rating <> 'Not Available') AS rating_present
+FROM hospital_quality.hospitals_raw
+GROUP BY overall_rating_footnote
+ORDER BY rating_missing DESC;
+
+
+   -- 4. CHECKS
+  
+SELECT 'hospitals_raw' AS table_name, COUNT(*) AS row_count 
+FROM hospitals_raw
+UNION ALL
+SELECT 'spending_raw',   COUNT(*)  
+FROM spending_raw
+UNION ALL
+SELECT 'unplanned_visits_raw',  COUNT(*)              
+FROM unplanned_visits_raw;
+
+-- hospitals in New York
 SELECT COUNT(*) AS ny_hospitals FROM hospitals_raw WHERE state = 'NY';
+select measure_name, measure_id,  count(*) as measures
+from hospital_quality.unplanned_visits_raw
+group by measure_name, measure_id;
 
--- Expected: 14 measures, each with 4,790 rows
+-- measures
 SELECT measure_id, COUNT(*) AS hospitals
 FROM unplanned_visits_raw
 GROUP BY measure_id
 ORDER BY measure_id;
+select *
+from hospital_quality.unplanned_visits_raw
+;
